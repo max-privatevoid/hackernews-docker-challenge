@@ -9,6 +9,7 @@ RUN nix \
     --option filter-syscalls false \
     develop --verbose
 
+RUN java --version
 RUN mkdir /tmp/nix-store-closure
 RUN cp -R $(nix-store -qR $(which java)) /tmp/nix-store-closure
 
