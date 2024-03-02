@@ -1,0 +1,39 @@
+FROM eclipse-temurin:21-alpine as build
+
+RUN mkdir /application
+COPY . /application
+WORKDIR /application
+
+RUN java -Djarmode=layertools -jar build/libs/*.jar extract
+
+RUN $JAVA_HOME/bin/jdeps --ignore-missing-deps -q \
+    --recursive \
+    --multi-release 21 \
+    --print-module-deps \
+    --class-path 'BOOT-INF/lib/*' \
+    build/libs/*.jar > dependencies.info
+
+RUN $JAVA_HOME/bin/jlink \
+    --add-modules $(cat dependencies.info) \
+    --strip-debug \
+    --compress 2 \
+    --no-header-files \
+    --no-man-pages \
+    --output /customRuntime
+
+FROM debian:stable-slim
+
+ENV JAVA_HOME /user/java/jdk21
+ENV PATH $JAVA_HOME/bin:$PATH
+
+COPY --from=build /customRuntime $JAVA_HOME
+
+RUN mkdir /application
+WORKDIR /application
+
+COPY --from=build /application/dependencies/ ./
+COPY --from=build /application/spring-boot-loader/ ./
+COPY --from=build /application/snapshot-dependencies/ ./
+COPY --from=build /application/application/ ./
+EXPOSE 8080
+ENTRYPOINT ["java", "org.springframework.boot.loader.JarLauncher"]
