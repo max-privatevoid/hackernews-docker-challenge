@@ -32,7 +32,12 @@
         packages.app = pkgs.stdenv.mkDerivation {
           name = "my-app";
           version = "1.0.0";
+          src = ./.;
           nativeBuildInputs = [ pkgs.jdk21 pkgs.gradle ];
+          installPhase = ''
+             mkdir -p "$out/bin"
+             #cp -rvf "$src/build/libs/*.jar" "$out/bin"
+          '';
         };
 
         defaultPackage = packages.app;

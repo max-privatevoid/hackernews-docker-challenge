@@ -8,6 +8,7 @@ RUN nix \
     --extra-experimental-features "nix-command flakes" \
     --option filter-syscalls false \
     develop --verbose
+CMD nix-shell -p jdk --verbose
 
 RUN java --version
 RUN mkdir /tmp/nix-store-closure
